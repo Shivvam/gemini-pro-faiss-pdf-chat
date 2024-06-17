@@ -10,8 +10,6 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
-from pathlib import Path
-
 
 load_dotenv()
 os.getenv("GOOGLE_API_KEY")
@@ -40,15 +38,10 @@ def get_text_chunks(text):
     chunks = text_splitter.split_text(text)
     return chunks
 
-def get_vector_store(text_chunks, filename):
-    FAISS_INDEXS_FOLDER = Path("FAISS_INDEXS")  # Replace with your desired path
+def get_vector_store(text_chunks):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    folder_name = os.path.splitext(filename)[0]  # Extract filename without extension
-    index_path = os.path.join(FAISS_INDEXS_FOLDER, folder_name)
-    # Create the folder structure within FAISS_INDEXS
-    Path(index_path).parent.mkdir(parents=True, exist_ok=True)
     vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
-    vector_store.save_local(index_path)
+    vector_store.save_local("faiss_index")
 
 def get_conversational_chain():
     prompt_template = """
@@ -63,58 +56,32 @@ def get_conversational_chain():
     chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
     return chain
 
-def count_directories(path):
-    directories = []
-    for entry in os.listdir(path):
-        if os.path.isdir(os.path.join(path, entry)):
-            directories.append(entry)
-    return directories
-
-def get_answer_for_index_path(index_path,user_question):
-    if os.path.exists(index_path):
-        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-        new_db = FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
+def user_input(user_question):
+    if os.path.exists("faiss_index"):
+    # Index exists, proceed with loading
+        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")    
+        new_db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
         docs = new_db.similarity_search(user_question)
         chain = get_conversational_chain()
         response = chain({"input_documents": docs, "question": user_question}, return_only_outputs=True)
         output_text = response["output_text"]  # Accessing the output_text key from the response
         print(output_text)
-        st.write("Reply: ", output_text)
-        return True
+        st.write("Reply: ", output_text)  # Displaying only the text part of the response
     else:
-        return False
-
-
-def user_input(user_question,selected_library):
-    found_index = False
-    if(selected_library):
-        index_path = os.path.join("FAISS_INDEXS",selected_library)
-        found_index = get_answer_for_index_path(index_path,user_question)
-    else:
-        FAISS_INDEXS_PATH = Path("FAISS_INDEXS")
-        uploaded_file_entries = count_directories(FAISS_INDEXS_PATH)
-        for filename in uploaded_file_entries:
-            index_path = os.path.join("FAISS_INDEXS",filename)
-            found_index = get_answer_for_index_path(index_path,user_question)
-            break  # Exit the loop after finding a valid index
-    if not found_index:
-        st.write("No FAISS index found for uploaded files. Please upload and process documents first.")
-
-
+    # Index doesn't exist, handle the situation (e.g., raise exception, create a new index)
+        st.write("Please upload a file")  # Displaying only the text part of the response
+        print("FAISS index file 'faiss_index' not found.")
+    
 
 
 def main():
     st.set_page_config("Chat with Files PDF, DOC, PPT")
     st.header('Extract Answers from Documents:mag_right:', divider='rainbow')
     st.info('Developed by Shivam')
-    FAISS_INDEXS_PATH = Path("FAISS_INDEXS")
-    uploaded_file_entries = count_directories(FAISS_INDEXS_PATH)
-    selected_library = st.selectbox(label="Select a File",options=uploaded_file_entries)
     user_question = st.text_input("Ask a Question from Document")
     ask_button = st.button("Ask")
-    global uploaded_filenames  
     if ask_button and user_question:
-        user_input(user_question,selected_library)
+        user_input(user_question)
     with st.sidebar:
         st.title("Embedding creation")
         uploaded_files = st.file_uploader("Upload your Files and Click on the Submit & Process Button", accept_multiple_files=True, type=['pdf', 'docx', 'pptx'])
@@ -123,7 +90,8 @@ def main():
                 raw_text = ""
                 for file in uploaded_files:
                     raw_text += get_text_from_file(file)
-                    get_vector_store(get_text_chunks(raw_text), file.name)
+                text_chunks = get_text_chunks(raw_text)
+                get_vector_store(text_chunks)
                 st.success("Done")
             
 
