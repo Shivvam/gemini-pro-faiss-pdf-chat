@@ -65,9 +65,10 @@ def get_conversational_chain():
 
 def count_directories(path):
     directories = []
-    for entry in os.listdir(path):
-        if os.path.isdir(os.path.join(path, entry)):
-            directories.append(entry)
+    if os.path.exists(path):
+        for entry in os.listdir(path):
+            if os.path.isdir(os.path.join(path, entry)):
+                directories.append(entry)
     return directories
 
 def get_answer_for_index_path(index_path,user_question):
