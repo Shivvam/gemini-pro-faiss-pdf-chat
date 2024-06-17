@@ -1,4 +1,3 @@
-
 # DocInsights: Extract Answers from Documents
 
 This application allows users to upload documents (PDF, DOCX, PPTX) and ask questions about the content. It extracts text from the uploaded files, processes the text to create embeddings, and then uses a conversational AI model to answer questions based on the document content.
@@ -15,10 +14,11 @@ This application allows users to upload documents (PDF, DOCX, PPTX) and ask ques
 
 1. Clone the repository.
 2. Install the required packages using pip:
-   
+
    ```
    pip install -r requirements.txt
    ```
+
 3. Get the google api ket from here https://aistudio.google.com/app/apikey
 
 4. Set up your Google API Key in a `.env` file:
@@ -30,11 +30,11 @@ This application allows users to upload documents (PDF, DOCX, PPTX) and ask ques
 ## Usage
 
 1. Run the application:
-   
-   ```
-   streamlit run DocInsights.py
-   ```
-3. Open the provided URL in your web browser.
-4. Upload your documents and click "Submit & Process".
-5. Ask a question about the document content in the input field and click "Ask".
 
+   ```
+   streamlit run app.py
+   ```
+
+2. Open the provided URL in your web browser.
+3. Upload your documents and click "Submit & Process".
+4. Ask a question about the document content in the input field and click "Ask".
