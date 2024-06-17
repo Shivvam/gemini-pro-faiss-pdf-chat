@@ -99,7 +99,7 @@ def user_input(user_question,selected_library):
             found_index = get_answer_for_index_path(index_path,user_question)
             break  # Exit the loop after finding a valid index
     if not found_index:
-        st.write("No FAISS index found for uploaded files. Please upload and process documents first.")
+        st.write("No Files uploaded. Please upload and process documents first.")
 
 
 
